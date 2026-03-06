@@ -17,7 +17,7 @@ Set these in Hostinger environment variables:
 
 - `HOST=0.0.0.0`
 - `PORT=3000` (or keep Hostinger provided port)
-- `DATABASE_URL=postgresql://postgres.[PROJECT-REF]:[URL_ENCODED_PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1`
+- `DATABASE_URL=postgresql://postgres:[URL_ENCODED_PASSWORD]@db.[PROJECT-REF].supabase.co:6543/postgres?pgbouncer=true&connection_limit=1`
 - `DATABASE_SSL_ENABLED=true`
 - `DATABASE_SSL_REJECT_UNAUTHORIZED=false`
 - `SUPABASE_DIRECT_URL=postgresql://postgres:[URL_ENCODED_PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres?sslmode=require` (optional, only for Prisma tooling like `db pull`)
@@ -36,7 +36,8 @@ After deployment:
 If `/api/health` is OK, database connectivity and Prisma initialization are valid.
 
 Notes:
-- Use the exact pooler host from Supabase dashboard (`aws-0-[REGION].pooler.supabase.com`), not `[PROJECT-REF].pooler.supabase.com`.
+- For serverless runtimes use Supavisor transaction mode (`db.[PROJECT-REF].supabase.co:6543`) with user `postgres`.
+- Session mode uses `aws-0-[REGION].pooler.supabase.com:5432` with user `postgres.[PROJECT-REF]`.
 - URL-encode password special characters (example: `@` becomes `%40`).
 - If you get `self-signed certificate in certificate chain`, keep `DATABASE_SSL_ENABLED=true` and set `DATABASE_SSL_REJECT_UNAUTHORIZED=false`.
 
