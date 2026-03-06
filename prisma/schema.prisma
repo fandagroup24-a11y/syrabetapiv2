@@ -3,30 +3,33 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("SUPABASE_DIRECT_URL")
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model admin_admin_actions {
-  id                String            @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                String            @id @default(uuid()) @db.Char(36)
   admin_user_id     String            @db.Char(36)
-  action            String            @db.Text
-  entity_type       String            @db.Text
-  entity_id         String?           @db.Text
+  action            String
+  entity_type       String
+  entity_id         String?
   before_json       Json?
   after_json        Json?
-  ip                String?           @db.Text
+  ip                String?
   created_at        DateTime          @default(now()) @db.Timestamp(0)
-  admin_admin_users admin_admin_users @relation(fields: [admin_user_id], references: [id], onUpdate: NoAction, map: "fk_admin_actions_admin")
+  admin_admin_users admin_admin_users @relation(fields: [admin_user_id], references: [id], onUpdate: NoAction)
 
-  @@index([admin_user_id, created_at], map: "idx_admin_actions_admin")
-  @@index([created_at], map: "idx_admin_actions_created")
+  @@index([admin_user_id, created_at])
+  @@index([created_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model admin_admin_users {
-  id                  String                   @id @default(dbgenerated("(uuid())")) @db.Char(36)
-  email               String                   @unique(map: "uq_admin_email") @db.VarChar(255)
-  password_hash       String                   @db.Text
+  id                  String                   @id @default(uuid()) @db.Char(36)
+  email               String                   @unique @db.VarChar(255)
+  password_hash       String
   role_id             String?                  @db.Char(36)
   display_name        String?                  @db.VarChar(255)
   status              admin_admin_users_status @default(ACTIVE)
@@ -34,14 +37,15 @@ model admin_admin_users {
   created_at          DateTime                 @default(now()) @db.Timestamp(0)
   updated_at          DateTime                 @default(now()) @db.Timestamp(0)
   admin_admin_actions admin_admin_actions[]
-  admin_roles         admin_roles?             @relation(fields: [role_id], references: [id], onUpdate: NoAction, map: "fk_admin_role")
+  admin_roles         admin_roles?             @relation(fields: [role_id], references: [id], onUpdate: NoAction)
   obs_fraud_signals   obs_fraud_signals[]
 
-  @@index([role_id], map: "fk_admin_role")
+  @@index([role_id])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model admin_risk_limits {
-  id         String   @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id         String   @id @default(uuid()) @db.Char(36)
   scope      String   @db.VarChar(20)
   scope_key  String?  @db.VarChar(255)
   name       String   @db.VarChar(255)
@@ -50,13 +54,14 @@ model admin_risk_limits {
   created_at DateTime @default(now()) @db.Timestamp(0)
   updated_at DateTime @default(now()) @db.Timestamp(0)
 
-  @@unique([scope, scope_key, name], map: "uq_risk_scope")
+  @@unique([scope, scope_key, name])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model admin_roles {
-  id                String              @id @default(dbgenerated("(uuid())")) @db.Char(36)
-  name              String              @unique(map: "uq_role_name") @db.VarChar(100)
-  description       String?             @db.Text
+  id                String              @id @default(uuid()) @db.Char(36)
+  name              String              @unique @db.VarChar(100)
+  description       String?
   permissions_json  Json
   is_system         Boolean             @default(false)
   created_at        DateTime            @default(now()) @db.Timestamp(0)
@@ -64,36 +69,39 @@ model admin_roles {
   admin_admin_users admin_admin_users[]
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model affiliate_affiliate_clicks {
-  id                        String                    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                        String                    @id @default(uuid()) @db.Char(36)
   affiliate_link_id         String                    @db.Char(36)
   session_id                String?                   @db.VarChar(255)
-  ip_hash                   String?                   @db.Text
-  user_agent                String?                   @db.Text
-  referrer                  String?                   @db.Text
+  ip_hash                   String?
+  user_agent                String?
+  referrer                  String?
   utm_json                  Json?
   clicked_at                DateTime                  @default(now()) @db.Timestamp(0)
-  affiliate_affiliate_links affiliate_affiliate_links @relation(fields: [affiliate_link_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_aff_clicks_link")
+  affiliate_affiliate_links affiliate_affiliate_links @relation(fields: [affiliate_link_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   affiliate_attributions    affiliate_attributions[]
 
-  @@index([affiliate_link_id, clicked_at], map: "idx_aff_clicks_link_time")
+  @@index([affiliate_link_id, clicked_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model affiliate_affiliate_links {
-  id                         String                       @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                         String                       @id @default(uuid()) @db.Char(36)
   affiliate_id               String                       @db.Char(36)
-  code                       String                       @unique(map: "uq_aff_link_code") @db.VarChar(100)
-  landing_url                String?                      @db.Text
+  code                       String                       @unique @db.VarChar(100)
+  landing_url                String?
   campaign                   String?                      @db.VarChar(255)
   created_at                 DateTime                     @default(now()) @db.Timestamp(0)
   affiliate_affiliate_clicks affiliate_affiliate_clicks[]
-  affiliate_affiliates       affiliate_affiliates         @relation(fields: [affiliate_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_aff_links_aff")
+  affiliate_affiliates       affiliate_affiliates         @relation(fields: [affiliate_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([affiliate_id], map: "idx_aff_links_aff")
+  @@index([affiliate_id])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model affiliate_affiliates {
-  id                        String                      @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                        String                      @id @default(uuid()) @db.Char(36)
   name                      String                      @db.VarChar(255)
   status                    String                      @default("ACTIVE") @db.VarChar(20)
   created_at                DateTime                    @default(now()) @db.Timestamp(0)
@@ -104,88 +112,93 @@ model affiliate_affiliates {
   affiliate_payouts         affiliate_payouts[]
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model affiliate_attributions {
-  id                         String                       @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                         String                       @id @default(uuid()) @db.Char(36)
   affiliate_id               String                       @db.Char(36)
   click_id                   String?                      @db.Char(36)
-  user_id                    String                       @unique(map: "uq_attrib_user") @db.Char(36)
+  user_id                    String                       @unique @db.Char(36)
   model                      affiliate_attributions_model @default(LAST_CLICK)
   attributed_at              DateTime                     @default(now()) @db.Timestamp(0)
   expires_at                 DateTime                     @db.Timestamp(0)
-  affiliate_affiliates       affiliate_affiliates         @relation(fields: [affiliate_id], references: [id], onUpdate: NoAction, map: "fk_attrib_aff")
-  affiliate_affiliate_clicks affiliate_affiliate_clicks?  @relation(fields: [click_id], references: [id], onUpdate: NoAction, map: "fk_attrib_click")
-  auth_users                 auth_users                   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_attrib_user")
+  affiliate_affiliates       affiliate_affiliates         @relation(fields: [affiliate_id], references: [id], onUpdate: NoAction)
+  affiliate_affiliate_clicks affiliate_affiliate_clicks?  @relation(fields: [click_id], references: [id], onUpdate: NoAction)
+  auth_users                 auth_users                   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([click_id], map: "fk_attrib_click")
-  @@index([affiliate_id, attributed_at], map: "idx_attrib_aff")
+  @@index([affiliate_id, attributed_at])
+  @@index([click_id])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model affiliate_commissions {
-  id                   String               @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                   String               @id @default(uuid()) @db.Char(36)
   affiliate_id         String               @db.Char(36)
   period               String               @db.VarChar(20)
   model_json           Json
   amount               Decimal              @default(0.00) @db.Decimal(18, 2)
   status               String               @default("OPEN") @db.VarChar(20)
   created_at           DateTime             @default(now()) @db.Timestamp(0)
-  affiliate_affiliates affiliate_affiliates @relation(fields: [affiliate_id], references: [id], onUpdate: NoAction, map: "fk_comm_aff")
+  affiliate_affiliates affiliate_affiliates @relation(fields: [affiliate_id], references: [id], onUpdate: NoAction)
 
-  @@unique([affiliate_id, period], map: "uq_aff_comm_period")
+  @@unique([affiliate_id, period])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model affiliate_conversions {
-  id                   String                                @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                   String                                @id @default(uuid()) @db.Char(36)
   affiliate_id         String                                @db.Char(36)
   user_id              String                                @db.Char(36)
   conversion_type      affiliate_conversions_conversion_type
   amount               Decimal?                              @db.Decimal(18, 2)
   created_at           DateTime                              @default(now()) @db.Timestamp(0)
-  affiliate_affiliates affiliate_affiliates                  @relation(fields: [affiliate_id], references: [id], onUpdate: NoAction, map: "fk_conv_aff")
-  auth_users           auth_users                            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_conv_user")
+  affiliate_affiliates affiliate_affiliates                  @relation(fields: [affiliate_id], references: [id], onUpdate: NoAction)
+  auth_users           auth_users                            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([affiliate_id, created_at], map: "idx_aff_conv_aff_time")
-  @@index([user_id, created_at], map: "idx_aff_conv_user_time")
+  @@index([affiliate_id, created_at])
+  @@index([user_id, created_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model affiliate_payouts {
-  id                   String               @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                   String               @id @default(uuid()) @db.Char(36)
   affiliate_id         String               @db.Char(36)
   amount               Decimal              @db.Decimal(18, 2)
   currency             String               @default("XOF") @db.VarChar(10)
   method               String?              @db.VarChar(50)
-  account_ref          String?              @db.Text
+  account_ref          String?
   status               String               @default("REQUESTED") @db.VarChar(20)
   requested_at         DateTime             @default(now()) @db.Timestamp(0)
   paid_at              DateTime?            @db.Timestamp(0)
   meta_json            Json?
-  affiliate_affiliates affiliate_affiliates @relation(fields: [affiliate_id], references: [id], onUpdate: NoAction, map: "fk_payout_aff")
+  affiliate_affiliates affiliate_affiliates @relation(fields: [affiliate_id], references: [id], onUpdate: NoAction)
 
-  @@index([affiliate_id, requested_at], map: "idx_aff_payouts_aff_time")
+  @@index([affiliate_id, requested_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model auth_kyc_profiles {
-  id                    String     @id @default(dbgenerated("(uuid())")) @db.Char(36)
-  user_id               String     @unique(map: "uq_kyc_user") @db.Char(36)
+  id                    String     @id @default(uuid()) @db.Char(36)
+  user_id               String     @unique @db.Char(36)
   level                 Int        @default(0)
   status                String     @default("PENDING") @db.VarChar(20)
-  full_name             String?    @db.Text
+  full_name             String?
   dob                   DateTime?  @db.Date
-  document_type         String?    @db.Text
-  document_no           String?    @db.Text
-  document_url          String?    @db.Text
+  document_type         String?
+  document_no           String?
+  document_url          String?
   submitted_at          DateTime?  @db.Timestamp(0)
   verified_at           DateTime?  @db.Timestamp(0)
-  rejection_reason      String?    @db.Text
-  full_name_encrypted   String?    @db.Text
-  document_no_encrypted String?    @db.Text
+  rejection_reason      String?
+  full_name_encrypted   String?
+  document_no_encrypted String?
   created_at            DateTime   @default(now()) @db.Timestamp(0)
   updated_at            DateTime   @default(now()) @db.Timestamp(0)
-  auth_users            auth_users @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_kyc_user")
+  auth_users            auth_users @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model auth_otp_codes {
-  id           String                 @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id           String                 @id @default(uuid()) @db.Char(36)
   user_id      String?                @db.Char(36)
   destination  String                 @db.VarChar(255)
   channel      auth_otp_codes_channel @default(SMS)
@@ -197,15 +210,16 @@ model auth_otp_codes {
   created_at   DateTime               @default(now()) @db.Timestamp(0)
   expires_at   DateTime               @db.Timestamp(0)
   verified_at  DateTime?              @db.Timestamp(0)
-  auth_users   auth_users?            @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "fk_otp_user")
+  auth_users   auth_users?            @relation(fields: [user_id], references: [id], onUpdate: NoAction)
 
-  @@index([destination, purpose, created_at], map: "idx_otp_dest_purpose")
-  @@index([expires_at], map: "idx_otp_expires")
-  @@index([user_id, created_at], map: "idx_otp_user")
+  @@index([destination, purpose, created_at])
+  @@index([expires_at])
+  @@index([user_id, created_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model auth_responsible_gaming {
-  id              String                             @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id              String                             @id @default(uuid()) @db.Char(36)
   user_id         String                             @db.Char(36)
   limit_type      auth_responsible_gaming_limit_type
   limit_value     Decimal?                           @db.Decimal(18, 2)
@@ -216,42 +230,44 @@ model auth_responsible_gaming {
   expires_at      DateTime?                          @db.Timestamp(0)
   created_at      DateTime                           @default(now()) @db.Timestamp(0)
   updated_at      DateTime                           @default(now()) @db.Timestamp(0)
-  auth_users      auth_users                         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_rg_user")
+  auth_users      auth_users                         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@unique([user_id, limit_type], map: "uq_rg_user_type")
-  @@index([status, expires_at], map: "idx_rg_status")
+  @@unique([user_id, limit_type])
+  @@index([status, expires_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model auth_sessions {
-  id           String     @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id           String     @id @default(uuid()) @db.Char(36)
   user_id      String     @db.Char(36)
-  refresh_hash String     @db.Text
-  ip_hash      String?    @db.Text
-  user_agent   String?    @db.Text
+  refresh_hash String
+  ip_hash      String?
+  user_agent   String?
   created_at   DateTime   @default(now()) @db.Timestamp(0)
   expires_at   DateTime   @db.Timestamp(0)
   revoked_at   DateTime?  @db.Timestamp(0)
-  auth_users   auth_users @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_sessions_user")
+  auth_users   auth_users @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([expires_at], map: "idx_sessions_expires")
-  @@index([user_id, created_at], map: "idx_sessions_user")
+  @@index([expires_at])
+  @@index([user_id, created_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model auth_users {
-  id                           String                         @id @default(dbgenerated("(uuid())")) @db.Char(36)
-  email                        String?                        @unique(map: "uq_email") @db.VarChar(255)
-  phone                        String?                        @unique(map: "uq_phone") @db.VarChar(50)
-  username                     String?                        @unique(map: "uq_username") @db.VarChar(50)
+  id                           String                         @id @default(uuid()) @db.Char(36)
+  email                        String?                        @unique @db.VarChar(255)
+  phone                        String?                        @unique @db.VarChar(50)
+  username                     String?                        @unique @db.VarChar(50)
   display_name                 String?                        @db.VarChar(255)
-  password_hash                String                         @db.Text
+  password_hash                String
   country                      String?                        @db.VarChar(10)
   currency                     String                         @default("XOF") @db.VarChar(10)
   locale                       String                         @default("fr") @db.VarChar(10)
   phone_verified               Boolean                        @default(false)
   email_verified               Boolean                        @default(false)
-  email_encrypted              String?                        @db.Text
+  email_encrypted              String?
   email_hash                   String?                        @db.VarChar(64)
-  phone_encrypted              String?                        @db.Text
+  phone_encrypted              String?
   phone_hash                   String?                        @db.VarChar(64)
   status                       auth_users_status              @default(PENDING)
   is_test                      Boolean                        @default(false)
@@ -285,13 +301,14 @@ model auth_users {
   wallet_wallets               wallet_wallets[]
   wallet_withdrawals           wallet_withdrawals[]
 
-  @@index([email_hash], map: "idx_users_email_hash")
-  @@index([phone_hash], map: "idx_users_phone_hash")
-  @@index([status, created_at], map: "idx_users_status_created")
+  @@index([email_hash])
+  @@index([phone_hash])
+  @@index([status, created_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model betting_bet_legs {
-  id                    String                  @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                    String                  @id @default(uuid()) @db.Char(36)
   bet_id                String                  @db.Char(36)
   event_id              String                  @db.Char(36)
   market_id             String                  @db.Char(36)
@@ -300,23 +317,23 @@ model betting_bet_legs {
   status                betting_bet_legs_status @default(PENDING)
   result_json           Json?
   created_at            DateTime                @default(now()) @db.Timestamp(0)
-  betting_bets          betting_bets            @relation(fields: [bet_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_legs_bet")
-  sportsbook_events     sportsbook_events       @relation(fields: [event_id], references: [id], onUpdate: NoAction, map: "fk_legs_event")
-  sportsbook_markets    sportsbook_markets      @relation(fields: [market_id], references: [id], onUpdate: NoAction, map: "fk_legs_market")
-  sportsbook_selections sportsbook_selections   @relation(fields: [selection_id], references: [id], onUpdate: NoAction, map: "fk_legs_selection")
+  betting_bets          betting_bets            @relation(fields: [bet_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sportsbook_events     sportsbook_events       @relation(fields: [event_id], references: [id], onUpdate: NoAction)
+  sportsbook_markets    sportsbook_markets      @relation(fields: [market_id], references: [id], onUpdate: NoAction)
+  sportsbook_selections sportsbook_selections   @relation(fields: [selection_id], references: [id], onUpdate: NoAction)
 
-  @@unique([bet_id, event_id], map: "uq_leg_bet_event")
-  @@index([market_id], map: "fk_legs_market")
-  @@index([bet_id], map: "idx_legs_bet")
-  @@index([bet_id, event_id, market_id, selection_id, odds_locked, status], map: "idx_legs_bet_covering")
-  @@index([event_id], map: "idx_legs_event")
-  @@index([event_id, status, bet_id, selection_id, odds_locked], map: "idx_legs_event_status")
-  @@index([selection_id], map: "idx_legs_selection")
+  @@unique([bet_id, event_id])
+  @@index([bet_id, event_id, market_id, selection_id, odds_locked, status])
+  @@index([bet_id])
+  @@index([event_id])
+  @@index([event_id, status, bet_id, selection_id, odds_locked])
+  @@index([market_id])
+  @@index([selection_id])
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model betting_bets {
-  id                           String                         @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                           String                         @id @default(uuid()) @db.Char(36)
   user_id                      String                         @db.Char(36)
   betslip_id                   String?                        @db.Char(36)
   type                         betting_bets_type
@@ -333,37 +350,39 @@ model betting_bets {
   meta_json                    Json?
   created_at                   DateTime                       @default(now()) @db.Timestamp(0)
   betting_bet_legs             betting_bet_legs[]
-  betting_betslips             betting_betslips?              @relation(fields: [betslip_id], references: [id], onUpdate: NoAction, map: "fk_bets_betslip")
-  promo_bonuses                promo_bonuses?                 @relation(fields: [bonus_id], references: [id], onUpdate: NoAction, map: "fk_bets_bonus")
-  promo_promo_redemptions      promo_promo_redemptions?       @relation(fields: [promo_redemption_id], references: [id], onUpdate: NoAction, map: "fk_bets_promo_redemption")
-  auth_users                   auth_users                     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_bets_user")
+  betting_betslips             betting_betslips?              @relation(fields: [betslip_id], references: [id], onUpdate: NoAction)
+  promo_bonuses                promo_bonuses?                 @relation(fields: [bonus_id], references: [id], onUpdate: NoAction)
+  promo_promo_redemptions      promo_promo_redemptions?       @relation(fields: [promo_redemption_id], references: [id], onUpdate: NoAction)
+  auth_users                   auth_users                     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   betting_cashout_offers       betting_cashout_offers[]
   betting_cashout_transactions betting_cashout_transactions[]
   promo_wagering_events        promo_wagering_events[]
 
-  @@index([betslip_id], map: "fk_bets_betslip")
-  @@index([bonus_id], map: "fk_bets_bonus")
-  @@index([promo_redemption_id], map: "fk_bets_promo_redemption")
-  @@index([placed_at], map: "idx_bets_placed")
-  @@index([status, created_at], map: "idx_bets_status_created")
-  @@index([user_id, created_at, type, stake, total_odds, potential_payout, actual_payout, status], map: "idx_bets_user_covering")
-  @@index([user_id, created_at], map: "idx_bets_user_created")
+  @@index([betslip_id])
+  @@index([bonus_id])
+  @@index([placed_at])
+  @@index([promo_redemption_id])
+  @@index([status, created_at])
+  @@index([user_id, created_at])
+  @@index([user_id, created_at, type, stake, total_odds, potential_payout, actual_payout, status])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model betting_betslips {
-  id           String         @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id           String         @id @default(uuid()) @db.Char(36)
   user_id      String         @db.Char(36)
   status       String         @default("OPEN") @db.VarChar(20)
   created_at   DateTime       @default(now()) @db.Timestamp(0)
   updated_at   DateTime       @default(now()) @db.Timestamp(0)
   betting_bets betting_bets[]
-  auth_users   auth_users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_betslips_user")
+  auth_users   auth_users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([user_id, created_at], map: "idx_betslips_user")
+  @@index([user_id, created_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model betting_cashout_offers {
-  id                           String                         @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                           String                         @id @default(uuid()) @db.Char(36)
   bet_id                       String                         @db.Char(36)
   amount                       Decimal                        @db.Decimal(18, 2)
   partial_min                  Decimal?                       @db.Decimal(18, 2)
@@ -371,16 +390,17 @@ model betting_cashout_offers {
   calculated_at                DateTime                       @default(now()) @db.Timestamp(0)
   expires_at                   DateTime?                      @db.Timestamp(0)
   created_at                   DateTime                       @default(now()) @db.Timestamp(0)
-  betting_bets                 betting_bets                   @relation(fields: [bet_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_cashout_offer_bet")
+  betting_bets                 betting_bets                   @relation(fields: [bet_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   betting_cashout_transactions betting_cashout_transactions[]
 
-  @@index([bet_id, status], map: "idx_cashout_offer_bet")
-  @@index([expires_at], map: "idx_cashout_offer_expires")
-  @@index([status, expires_at, bet_id, amount], map: "idx_cashout_status_expires")
+  @@index([bet_id, status])
+  @@index([expires_at])
+  @@index([status, expires_at, bet_id, amount])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model betting_cashout_transactions {
-  id                         String                              @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                         String                              @id @default(uuid()) @db.Char(36)
   bet_id                     String                              @db.Char(36)
   offer_id                   String                              @db.Char(36)
   user_id                    String                              @db.Char(36)
@@ -390,33 +410,34 @@ model betting_cashout_transactions {
   remaining_potential_payout Decimal?                            @db.Decimal(18, 2)
   status                     betting_cashout_transactions_status @default(PENDING)
   created_at                 DateTime                            @default(now()) @db.Timestamp(0)
-  betting_bets               betting_bets                        @relation(fields: [bet_id], references: [id], onUpdate: NoAction, map: "fk_cashout_tx_bet")
-  betting_cashout_offers     betting_cashout_offers              @relation(fields: [offer_id], references: [id], onUpdate: NoAction, map: "fk_cashout_tx_offer")
-  auth_users                 auth_users                          @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "fk_cashout_tx_user")
+  betting_bets               betting_bets                        @relation(fields: [bet_id], references: [id], onUpdate: NoAction)
+  betting_cashout_offers     betting_cashout_offers              @relation(fields: [offer_id], references: [id], onUpdate: NoAction)
+  auth_users                 auth_users                          @relation(fields: [user_id], references: [id], onUpdate: NoAction)
 
-  @@index([offer_id], map: "fk_cashout_tx_offer")
-  @@index([bet_id], map: "idx_cashout_tx_bet")
-  @@index([user_id, created_at], map: "idx_cashout_tx_user")
+  @@index([bet_id])
+  @@index([offer_id])
+  @@index([user_id, created_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model betting_settlement_jobs {
-  id                String            @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                String            @id @default(uuid()) @db.Char(36)
   event_id          String            @db.Char(36)
   status            String            @default("QUEUED") @db.VarChar(20)
-  message           String?           @db.Text
+  message           String?
   created_at        DateTime          @default(now()) @db.Timestamp(0)
   finished_at       DateTime?         @db.Timestamp(0)
-  sportsbook_events sportsbook_events @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_jobs_event")
+  sportsbook_events sportsbook_events @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([created_at], map: "idx_settlement_jobs_created")
-  @@index([event_id], map: "idx_settlement_jobs_event")
+  @@index([created_at])
+  @@index([event_id])
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model br_entity_mapping {
-  id             String                        @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id             String                        @id @default(uuid()) @db.Char(36)
   entity_type    br_entity_mapping_entity_type
-  betradar_urn   String                        @unique(map: "uq_br_urn") @db.VarChar(255)
+  betradar_urn   String                        @unique @db.VarChar(255)
   betradar_id    Int
   internal_table String                        @db.VarChar(100)
   internal_id    String                        @db.Char(36)
@@ -426,15 +447,15 @@ model br_entity_mapping {
   created_at     DateTime                      @default(now()) @db.Timestamp(0)
   updated_at     DateTime                      @default(now()) @db.Timestamp(0)
 
-  @@unique([entity_type, betradar_id], map: "uq_br_type_id")
-  @@index([internal_table, internal_id], map: "idx_br_internal")
-  @@index([last_synced_at], map: "idx_br_synced")
-  @@index([entity_type, is_active], map: "idx_br_type_active")
+  @@unique([entity_type, betradar_id])
+  @@index([entity_type, is_active])
+  @@index([internal_table, internal_id])
+  @@index([last_synced_at])
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model br_feed_messages {
-  id                String                        @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                String                        @db.Char(36)
   producer_id       Int
   message_type      br_feed_messages_message_type
   betradar_event_id String?                       @db.VarChar(100)
@@ -443,29 +464,28 @@ model br_feed_messages {
   timestamp_ms      BigInt
   processing_ms     Int?
   status            br_feed_messages_status       @default(RECEIVED)
-  error_message     String?                       @db.Text
+  error_message     String?
   payload_hash      String?                       @db.VarChar(64)
   payload_size      Int?
   created_at        DateTime                      @default(now()) @db.Timestamp(0)
-  sportsbook_events sportsbook_events?            @relation(fields: [event_id], references: [id], onUpdate: NoAction, map: "fk_brfm_event")
-  br_producers      br_producers                  @relation(fields: [producer_id], references: [id], onUpdate: NoAction, map: "fk_brfm_producer")
+  sportsbook_events sportsbook_events?            @relation(fields: [event_id], references: [id], onUpdate: NoAction)
+  br_producers      br_producers                  @relation(fields: [producer_id], references: [id], onUpdate: NoAction)
 
   @@id([id, created_at])
-  @@index([betradar_event_id, created_at], map: "idx_brfm_event_time")
-  @@index([event_id, created_at], map: "idx_brfm_internal_evt")
-  @@index([producer_id, created_at], map: "idx_brfm_producer")
-  @@index([status, created_at], map: "idx_brfm_status")
-  @@index([message_type, created_at], map: "idx_brfm_type_time")
+  @@index([betradar_event_id, created_at])
+  @@index([event_id, created_at])
+  @@index([message_type, created_at])
+  @@index([producer_id, created_at])
+  @@index([status, created_at])
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model br_feed_state {
   id                       Int                             @id @default(1)
   connection_status        br_feed_state_connection_status @default(DISCONNECTED)
   connected_since          DateTime?                       @db.Timestamp(0)
   last_disconnect_at       DateTime?                       @db.Timestamp(0)
-  disconnect_reason        String?                         @db.Text
+  disconnect_reason        String?
   messages_received_today  BigInt                          @default(0)
   messages_processed_today BigInt                          @default(0)
   messages_errors_today    BigInt                          @default(0)
@@ -476,9 +496,9 @@ model br_feed_state {
   updated_at               DateTime                        @default(now()) @db.Timestamp(0)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model br_market_mapping {
-  id                      String                   @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                      String                   @id @default(uuid()) @db.Char(36)
   betradar_market_id      Int
   variant                 String?                  @db.VarChar(255)
   sport_id                String?                  @db.Char(36)
@@ -487,32 +507,32 @@ model br_market_mapping {
   name_template           String?                  @db.VarChar(500)
   is_active               Boolean                  @default(true)
   created_at              DateTime                 @default(now()) @db.Timestamp(0)
-  sportsbook_sports       sportsbook_sports?       @relation(fields: [sport_id], references: [id], onUpdate: NoAction, map: "fk_brmm_sport")
-  sportsbook_market_types sportsbook_market_types? @relation(fields: [market_type_id], references: [id], onUpdate: NoAction, map: "fk_brmm_type")
+  sportsbook_market_types sportsbook_market_types? @relation(fields: [market_type_id], references: [id], onUpdate: NoAction)
+  sportsbook_sports       sportsbook_sports?       @relation(fields: [sport_id], references: [id], onUpdate: NoAction)
 
-  @@unique([betradar_market_id, variant, sport_id], map: "uq_br_market")
-  @@index([sport_id], map: "fk_brmm_sport")
-  @@index([market_type_id], map: "idx_br_market_type")
+  @@unique([betradar_market_id, variant, sport_id])
+  @@index([market_type_id])
+  @@index([sport_id])
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model br_outcome_mapping {
-  id                    String   @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                    String   @id @default(uuid()) @db.Char(36)
   betradar_market_id    Int
   betradar_outcome_id   String   @db.VarChar(100)
   selection_name        String   @db.VarChar(255)
   display_name_template String?  @db.VarChar(255)
   created_at            DateTime @default(now()) @db.Timestamp(0)
 
-  @@unique([betradar_market_id, betradar_outcome_id], map: "uq_br_outcome")
-  @@index([betradar_market_id], map: "idx_br_outcome_market")
+  @@unique([betradar_market_id, betradar_outcome_id])
+  @@index([betradar_market_id])
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model br_producers {
   id                    Int                 @id
   name                  String              @db.VarChar(100)
-  description           String?             @db.Text
+  description           String?
   api_url               String?             @db.VarChar(500)
   is_active             Boolean             @default(true)
   last_alive_at         DateTime?           @db.Timestamp(0)
@@ -524,75 +544,79 @@ model br_producers {
   br_feed_messages      br_feed_messages[]
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model compliance_encryption_keys {
-  id            String                            @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id            String                            @id @default(uuid()) @db.Char(36)
   key_alias     String                            @db.VarChar(100)
   key_version   Int                               @default(1)
   algorithm     String                            @default("AES-256-GCM") @db.VarChar(50)
-  encrypted_key String                            @db.Text
+  encrypted_key String
   status        compliance_encryption_keys_status @default(ACTIVE)
   activated_at  DateTime                          @default(now()) @db.Timestamp(0)
   rotated_at    DateTime?                         @db.Timestamp(0)
   created_at    DateTime                          @default(now()) @db.Timestamp(0)
 
-  @@unique([key_alias, key_version], map: "uq_key_alias_version")
-  @@index([status, key_alias], map: "idx_key_status")
+  @@unique([key_alias, key_version])
+  @@index([status, key_alias])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model notif_notifications {
-  id              String                      @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id              String                      @id @default(uuid()) @db.Char(36)
   user_id         String                      @db.Char(36)
   template_id     String?                     @db.Char(36)
   channel         notif_notifications_channel
   title           String?                     @db.VarChar(500)
-  body            String                      @db.Text
+  body            String
   data_json       Json?
   status          notif_notifications_status  @default(PENDING)
   provider_ref    String?                     @db.VarChar(255)
-  error_message   String?                     @db.Text
+  error_message   String?
   sent_at         DateTime?                   @db.Timestamp(0)
   delivered_at    DateTime?                   @db.Timestamp(0)
   read_at         DateTime?                   @db.Timestamp(0)
   created_at      DateTime                    @default(now()) @db.Timestamp(0)
-  notif_templates notif_templates?            @relation(fields: [template_id], references: [id], onUpdate: NoAction, map: "fk_notif_template")
-  auth_users      auth_users                  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_notif_user")
+  notif_templates notif_templates?            @relation(fields: [template_id], references: [id], onUpdate: NoAction)
+  auth_users      auth_users                  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([status, created_at], map: "idx_notif_status")
-  @@index([template_id], map: "idx_notif_template")
-  @@index([user_id, status, created_at], map: "idx_notif_user_status")
+  @@index([status, created_at])
+  @@index([template_id])
+  @@index([user_id, status, created_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model notif_preferences {
-  id         String                    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id         String                    @id @default(uuid()) @db.Char(36)
   user_id    String                    @db.Char(36)
   channel    notif_preferences_channel
   category   String                    @db.VarChar(50)
   enabled    Boolean                   @default(true)
   created_at DateTime                  @default(now()) @db.Timestamp(0)
   updated_at DateTime                  @default(now()) @db.Timestamp(0)
-  auth_users auth_users                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_notif_pref_user")
+  auth_users auth_users                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@unique([user_id, channel, category], map: "uq_notif_pref")
+  @@unique([user_id, channel, category])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model notif_templates {
-  id                  String                  @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                  String                  @id @default(uuid()) @db.Char(36)
   code                String                  @db.VarChar(100)
   channel             notif_templates_channel
   locale              String                  @default("fr") @db.VarChar(10)
-  subject             String?                 @db.Text
-  body_template       String                  @db.Text
+  subject             String?
+  body_template       String
   variables_json      Json?
   status              String                  @default("ACTIVE") @db.VarChar(20)
   created_at          DateTime                @default(now()) @db.Timestamp(0)
   notif_notifications notif_notifications[]
 
-  @@unique([code, channel, locale], map: "uq_tpl_code_channel_locale")
+  @@unique([code, channel, locale])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model obs_api_logs {
-  id                  String              @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                  String              @db.Char(36)
   method              obs_api_logs_method
   endpoint            String              @db.VarChar(500)
   route_pattern       String?             @db.VarChar(255)
@@ -609,24 +633,25 @@ model obs_api_logs {
   db_time_ms          Int?
   cache_hit           Boolean?
   error_code          String?             @db.VarChar(100)
-  error_message       String?             @db.Text
+  error_message       String?
   created_at          DateTime            @default(now()) @db.Timestamp(0)
 
   @@id([id, created_at])
-  @@index([route_pattern, created_at], map: "idx_api_endpoint_time")
-  @@index([status_code, route_pattern, created_at], map: "idx_api_errors")
-  @@index([duration_ms, created_at], map: "idx_api_slow")
-  @@index([status_code, created_at], map: "idx_api_status_time")
-  @@index([user_id, created_at], map: "idx_api_user_time")
+  @@index([duration_ms, created_at])
+  @@index([route_pattern, created_at])
+  @@index([status_code, created_at])
+  @@index([status_code, route_pattern, created_at])
+  @@index([user_id, created_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model obs_bet_funnel {
-  id                String                   @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                String                   @db.Char(36)
   session_id        String                   @db.VarChar(255)
   user_id           String?                  @db.Char(36)
   funnel_session_id String                   @db.VarChar(255)
   step              obs_bet_funnel_step
-  step_order        Int                      @db.TinyInt
+  step_order        Int
   event_id          String?                  @db.Char(36)
   market_id         String?                  @db.Char(36)
   selection_id      String?                  @db.Char(36)
@@ -637,19 +662,20 @@ model obs_bet_funnel {
   selections_count  Int?
   rejection_reason  String?                  @db.VarChar(255)
   created_at        DateTime                 @default(now()) @db.Timestamp(0)
-  auth_users        auth_users?              @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "fk_bf_user")
+  auth_users        auth_users?              @relation(fields: [user_id], references: [id], onUpdate: NoAction)
 
   @@id([id, created_at])
-  @@index([event_id, created_at], map: "idx_bf_event")
-  @@index([funnel_session_id, step_order], map: "idx_bf_funnel_session")
-  @@index([rejection_reason, created_at], map: "idx_bf_rejection")
-  @@index([session_id, created_at], map: "idx_bf_session")
-  @@index([step, created_at], map: "idx_bf_step_time")
-  @@index([user_id, created_at], map: "idx_bf_user_time")
+  @@index([event_id, created_at])
+  @@index([funnel_session_id, step_order])
+  @@index([rejection_reason, created_at])
+  @@index([session_id, created_at])
+  @@index([step, created_at])
+  @@index([user_id, created_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model obs_click_tracking {
-  id               String                        @default(dbgenerated("(uuid())")) @db.Char(36)
+  id               String                        @db.Char(36)
   session_id       String                        @db.VarChar(255)
   user_id          String?                       @db.Char(36)
   page_view_id     String?                       @db.Char(36)
@@ -666,19 +692,20 @@ model obs_click_tracking {
   y_pct            Decimal?                      @db.Decimal(5, 2)
   meta_json        Json?
   clicked_at       DateTime                      @default(now()) @db.Timestamp(0)
-  auth_users       auth_users?                   @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "fk_ct_user")
+  auth_users       auth_users?                   @relation(fields: [user_id], references: [id], onUpdate: NoAction)
 
   @@id([id, clicked_at])
-  @@index([event_id, clicked_at], map: "idx_ct_event")
-  @@index([selection_id, clicked_at], map: "idx_ct_selection")
-  @@index([session_id, clicked_at], map: "idx_ct_session")
-  @@index([sport_id, clicked_at], map: "idx_ct_sport")
-  @@index([click_type, clicked_at], map: "idx_ct_type_time")
-  @@index([user_id, clicked_at], map: "idx_ct_user_time")
+  @@index([click_type, clicked_at])
+  @@index([event_id, clicked_at])
+  @@index([selection_id, clicked_at])
+  @@index([session_id, clicked_at])
+  @@index([sport_id, clicked_at])
+  @@index([user_id, clicked_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model obs_device_fingerprints {
-  id                String                               @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                String                               @id @default(uuid()) @db.Char(36)
   fingerprint_hash  String                               @db.VarChar(255)
   user_id           String                               @db.Char(36)
   device_type       obs_device_fingerprints_device_type?
@@ -696,87 +723,91 @@ model obs_device_fingerprints {
   plugins_hash      String?                              @db.VarChar(255)
   trust_score       Decimal?                             @db.Decimal(5, 2)
   is_flagged        Boolean                              @default(false)
-  flag_reason       String?                              @db.Text
+  flag_reason       String?
   first_seen_at     DateTime                             @default(now()) @db.Timestamp(0)
   last_seen_at      DateTime                             @default(now()) @db.Timestamp(0)
   times_seen        Int                                  @default(1)
-  auth_users        auth_users                           @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_df_user")
+  auth_users        auth_users                           @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([fingerprint_hash], map: "idx_df_fingerprint")
-  @@index([fingerprint_hash, user_id, last_seen_at], map: "idx_df_fingerprint_user")
-  @@index([is_flagged, last_seen_at], map: "idx_df_flagged")
-  @@index([trust_score], map: "idx_df_trust")
-  @@index([user_id, first_seen_at], map: "idx_df_user")
+  @@index([fingerprint_hash])
+  @@index([fingerprint_hash, user_id, last_seen_at])
+  @@index([is_flagged, last_seen_at])
+  @@index([trust_score])
+  @@index([user_id, first_seen_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model obs_error_logs {
-  id           String               @default(dbgenerated("(uuid())")) @db.Char(36)
+  id           String               @db.Char(36)
   level        obs_error_logs_level
   source       String               @db.VarChar(20)
   service      String?              @db.VarChar(255)
   endpoint     String?              @db.VarChar(255)
-  message      String               @db.Text
-  stack        String?              @db.Text
+  message      String
+  stack        String?
   user_id      String?              @db.Char(36)
   session_id   String?              @db.VarChar(255)
   request_id   String?              @db.VarChar(255)
   payload_json Json?
   created_at   DateTime             @default(now()) @db.Timestamp(0)
-  auth_users   auth_users?          @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "fk_err_user")
+  auth_users   auth_users?          @relation(fields: [user_id], references: [id], onUpdate: NoAction)
 
   @@id([id, created_at])
-  @@index([level, created_at], map: "idx_error_logs_level_time")
-  @@index([user_id, created_at], map: "idx_error_logs_user_time")
+  @@index([level, created_at])
+  @@index([user_id, created_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model obs_fraud_signals {
-  id                String                        @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                String                        @id @default(uuid()) @db.Char(36)
   user_id           String                        @db.Char(36)
   session_id        String?                       @db.VarChar(255)
   signal_type       obs_fraud_signals_signal_type
   severity          obs_fraud_signals_severity    @default(MEDIUM)
   score             Decimal                       @default(0.00) @db.Decimal(5, 2)
-  description       String                        @db.Text
+  description       String
   evidence_json     Json
   status            obs_fraud_signals_status      @default(NEW)
   reviewed_by       String?                       @db.Char(36)
-  review_notes      String?                       @db.Text
+  review_notes      String?
   action_taken      String?                       @db.VarChar(255)
   detected_at       DateTime                      @default(now()) @db.Timestamp(0)
   reviewed_at       DateTime?                     @db.Timestamp(0)
-  admin_admin_users admin_admin_users?            @relation(fields: [reviewed_by], references: [id], onUpdate: NoAction, map: "fk_fs_reviewer")
-  auth_users        auth_users                    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_fs_user")
+  admin_admin_users admin_admin_users?            @relation(fields: [reviewed_by], references: [id], onUpdate: NoAction)
+  auth_users        auth_users                    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([reviewed_by], map: "fk_fs_reviewer")
-  @@index([severity, status, detected_at], map: "idx_fs_severity_status")
-  @@index([status, detected_at], map: "idx_fs_status")
-  @@index([signal_type, status], map: "idx_fs_type_status")
-  @@index([user_id, detected_at], map: "idx_fs_user_time")
+  @@index([reviewed_by])
+  @@index([severity, status, detected_at])
+  @@index([signal_type, status])
+  @@index([status, detected_at])
+  @@index([user_id, detected_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model obs_login_attempts {
-  id                    String                             @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                    String                             @db.Char(36)
   identifier            String                             @db.VarChar(255)
   user_id               String?                            @db.Char(36)
   method                obs_login_attempts_method          @default(PASSWORD)
   success               Boolean                            @default(false)
   failure_reason        obs_login_attempts_failure_reason?
   ip_hash               String?                            @db.VarChar(255)
-  user_agent            String?                            @db.Text
+  user_agent            String?
   device_fingerprint_id String?                            @db.Char(36)
   country               String?                            @db.VarChar(10)
   attempted_at          DateTime                           @default(now()) @db.Timestamp(0)
-  auth_users            auth_users?                        @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "fk_la_user")
+  auth_users            auth_users?                        @relation(fields: [user_id], references: [id], onUpdate: NoAction)
 
   @@id([id, attempted_at])
-  @@index([success, attempted_at], map: "idx_la_failed")
-  @@index([identifier, attempted_at], map: "idx_la_identifier_time")
-  @@index([ip_hash(length: 64), attempted_at], map: "idx_la_ip_time")
-  @@index([user_id, attempted_at], map: "idx_la_user_time")
+  @@index([identifier, attempted_at])
+  @@index([ip_hash, attempted_at])
+  @@index([success, attempted_at])
+  @@index([user_id, attempted_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model obs_page_views {
-  id                   String                   @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                   String                   @db.Char(36)
   session_id           String                   @db.VarChar(255)
   user_id              String?                  @db.Char(36)
   page_url             String                   @db.VarChar(2000)
@@ -789,20 +820,21 @@ model obs_page_views {
   view_sequence        Int                      @default(1)
   load_time_ms         Int?
   time_on_page_seconds Int?
-  scroll_depth_pct     Int?                     @db.TinyInt
+  scroll_depth_pct     Int?
   viewed_at            DateTime                 @default(now()) @db.Timestamp(0)
-  auth_users           auth_users?              @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "fk_pv_user")
+  auth_users           auth_users?              @relation(fields: [user_id], references: [id], onUpdate: NoAction)
 
   @@id([id, viewed_at])
-  @@index([event_id, viewed_at], map: "idx_pv_event")
-  @@index([page_type, viewed_at], map: "idx_pv_page_type")
-  @@index([session_id, view_sequence], map: "idx_pv_session")
-  @@index([sport_id, viewed_at], map: "idx_pv_sport")
-  @@index([user_id, viewed_at], map: "idx_pv_user_time")
+  @@index([event_id, viewed_at])
+  @@index([page_type, viewed_at])
+  @@index([session_id, view_sequence])
+  @@index([sport_id, viewed_at])
+  @@index([user_id, viewed_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model obs_search_logs {
-  id                  String                      @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                  String                      @db.Char(36)
   session_id          String                      @db.VarChar(255)
   user_id             String?                     @db.Char(36)
   query               String                      @db.VarChar(500)
@@ -814,18 +846,19 @@ model obs_search_logs {
   result_clicked_id   String?                     @db.Char(36)
   time_to_click_ms    Int?
   searched_at         DateTime                    @default(now()) @db.Timestamp(0)
-  auth_users          auth_users?                 @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "fk_sl_user")
+  auth_users          auth_users?                 @relation(fields: [user_id], references: [id], onUpdate: NoAction)
 
   @@id([id, searched_at])
-  @@index([results_count, searched_at], map: "idx_sl_no_results")
-  @@index([query_normalized, searched_at], map: "idx_sl_query_norm")
-  @@index([search_type, searched_at], map: "idx_sl_type")
-  @@index([user_id, searched_at], map: "idx_sl_user_time")
+  @@index([query_normalized, searched_at])
+  @@index([results_count, searched_at])
+  @@index([search_type, searched_at])
+  @@index([user_id, searched_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model obs_sessions_tracking {
-  id                 String                             @id @default(dbgenerated("(uuid())")) @db.Char(36)
-  session_id         String                             @unique(map: "uq_ost_session") @db.VarChar(255)
+  id                 String                             @id @default(uuid()) @db.Char(36)
+  session_id         String                             @unique @db.VarChar(255)
   user_id            String?                            @db.Char(36)
   device_type        obs_sessions_tracking_device_type?
   browser            String?                            @db.VarChar(100)
@@ -834,13 +867,13 @@ model obs_sessions_tracking {
   ip_hash            String?                            @db.VarChar(255)
   country            String?                            @db.VarChar(10)
   city               String?                            @db.VarChar(100)
-  referrer           String?                            @db.Text
+  referrer           String?
   utm_source         String?                            @db.VarChar(255)
   utm_medium         String?                            @db.VarChar(255)
   utm_campaign       String?                            @db.VarChar(255)
   utm_content        String?                            @db.VarChar(255)
   affiliate_code     String?                            @db.VarChar(100)
-  landing_page       String?                            @db.Text
+  landing_page       String?
   pages_viewed       Int                                @default(0)
   clicks_count       Int                                @default(0)
   bets_placed        Int                                @default(0)
@@ -851,17 +884,18 @@ model obs_sessions_tracking {
   last_activity_at   DateTime                           @default(now()) @db.Timestamp(0)
   ended_at           DateTime?                          @db.Timestamp(0)
   duration_seconds   Int?
-  auth_users         auth_users?                        @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "fk_ost_user")
+  auth_users         auth_users?                        @relation(fields: [user_id], references: [id], onUpdate: NoAction)
 
-  @@index([affiliate_code, started_at], map: "idx_ost_affiliate")
-  @@index([device_type, started_at], map: "idx_ost_device_started")
-  @@index([started_at], map: "idx_ost_started")
-  @@index([user_id, started_at], map: "idx_ost_user_started")
-  @@index([utm_source, started_at], map: "idx_ost_utm_source")
+  @@index([affiliate_code, started_at])
+  @@index([device_type, started_at])
+  @@index([started_at])
+  @@index([user_id, started_at])
+  @@index([utm_source, started_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model obs_user_events {
-  id              String      @default(dbgenerated("(uuid())")) @db.Char(36)
+  id              String      @db.Char(36)
   user_id         String?     @db.Char(36)
   session_id      String?     @db.VarChar(255)
   event_name      String      @db.VarChar(255)
@@ -870,17 +904,18 @@ model obs_user_events {
   properties_json Json?
   device_json     Json?
   locale          String?     @db.VarChar(20)
-  ip_hash         String?     @db.Text
+  ip_hash         String?
   event_time      DateTime    @default(now()) @db.Timestamp(0)
-  auth_users      auth_users? @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "fk_obs_events_user")
+  auth_users      auth_users? @relation(fields: [user_id], references: [id], onUpdate: NoAction)
 
   @@id([id, event_time])
-  @@index([event_name, event_time], map: "idx_user_events_name_time")
-  @@index([user_id, event_time], map: "idx_user_events_user_time")
+  @@index([event_name, event_time])
+  @@index([user_id, event_time])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model promo_bonuses {
-  id                    String                  @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                    String                  @id @default(uuid()) @db.Char(36)
   user_id               String                  @db.Char(36)
   source                String?                 @db.VarChar(50)
   amount                Decimal                 @db.Decimal(18, 2)
@@ -891,17 +926,18 @@ model promo_bonuses {
   wagering_completed    Decimal                 @default(0.00) @db.Decimal(18, 2)
   meta_json             Json?
   betting_bets          betting_bets[]
-  auth_users            auth_users              @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_bonus_user")
+  auth_users            auth_users              @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   promo_wagering_events promo_wagering_events[]
 
-  @@index([status], map: "idx_bonus_status")
-  @@index([user_id, granted_at], map: "idx_bonus_user")
-  @@index([user_id, status, expires_at, amount, wagering_required, wagering_completed], map: "idx_bonus_user_covering")
+  @@index([status])
+  @@index([user_id, granted_at])
+  @@index([user_id, status, expires_at, amount, wagering_required, wagering_completed])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model promo_promo_codes {
-  id                      String                    @id @default(dbgenerated("(uuid())")) @db.Char(36)
-  code                    String                    @unique(map: "uq_promo_code") @db.VarChar(100)
+  id                      String                    @id @default(uuid()) @db.Char(36)
+  code                    String                    @unique @db.VarChar(100)
   name                    String                    @db.VarChar(255)
   type                    promo_promo_codes_type
   value                   Decimal                   @db.Decimal(18, 2)
@@ -917,11 +953,12 @@ model promo_promo_codes {
   updated_at              DateTime                  @default(now()) @db.Timestamp(0)
   promo_promo_redemptions promo_promo_redemptions[]
 
-  @@index([status], map: "idx_promo_status")
+  @@index([status])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model promo_promo_redemptions {
-  id                String                         @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                String                         @id @default(uuid()) @db.Char(36)
   promo_code_id     String                         @db.Char(36)
   user_id           String                         @db.Char(36)
   status            promo_promo_redemptions_status @default(PENDING)
@@ -930,38 +967,41 @@ model promo_promo_redemptions {
   reference_id      String?                        @db.VarChar(255)
   meta_json         Json?
   betting_bets      betting_bets[]
-  promo_promo_codes promo_promo_codes              @relation(fields: [promo_code_id], references: [id], onUpdate: NoAction, map: "fk_redemptions_code")
-  auth_users        auth_users                     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_redemptions_user")
+  promo_promo_codes promo_promo_codes              @relation(fields: [promo_code_id], references: [id], onUpdate: NoAction)
+  auth_users        auth_users                     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@unique([promo_code_id, user_id, reference_type, reference_id], map: "uq_promo_redeem")
-  @@index([promo_code_id, redeemed_at], map: "idx_redemptions_code")
-  @@index([user_id, redeemed_at], map: "idx_redemptions_user")
+  @@unique([promo_code_id, user_id, reference_type, reference_id])
+  @@index([promo_code_id, redeemed_at])
+  @@index([user_id, redeemed_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model promo_wagering_events {
-  id            String        @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id            String        @id @default(uuid()) @db.Char(36)
   bonus_id      String        @db.Char(36)
   bet_id        String?       @db.Char(36)
   amount        Decimal       @db.Decimal(18, 2)
   created_at    DateTime      @default(now()) @db.Timestamp(0)
-  betting_bets  betting_bets? @relation(fields: [bet_id], references: [id], onUpdate: NoAction, map: "fk_wager_bet")
-  promo_bonuses promo_bonuses @relation(fields: [bonus_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_wager_bonus")
+  betting_bets  betting_bets? @relation(fields: [bet_id], references: [id], onUpdate: NoAction)
+  promo_bonuses promo_bonuses @relation(fields: [bonus_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([bet_id], map: "fk_wager_bet")
-  @@index([bonus_id, created_at], map: "idx_wagering_bonus_created")
+  @@index([bet_id])
+  @@index([bonus_id, created_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model sportsbook_countries {
-  id                 String               @id @default(dbgenerated("(uuid())")) @db.Char(36)
-  code               String               @unique(map: "uq_country_code") @db.VarChar(10)
+  id                 String               @id @default(uuid()) @db.Char(36)
+  code               String               @unique @db.VarChar(10)
   name               String               @db.VarChar(255)
   created_at         DateTime             @default(now()) @db.Timestamp(0)
   sportsbook_leagues sportsbook_leagues[]
   sportsbook_teams   sportsbook_teams[]
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model sportsbook_event_participants {
-  id                String                                      @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                String                                      @id @default(uuid()) @db.Char(36)
   event_id          String                                      @db.Char(36)
   team_id           String                                      @db.Char(36)
   role              sportsbook_event_participants_role          @default(PARTICIPANT)
@@ -971,16 +1011,17 @@ model sportsbook_event_participants {
   result_status     sportsbook_event_participants_result_status @default(PENDING)
   meta_json         Json?
   created_at        DateTime                                    @default(now()) @db.Timestamp(0)
-  sportsbook_events sportsbook_events                           @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ep_event")
-  sportsbook_teams  sportsbook_teams                            @relation(fields: [team_id], references: [id], onUpdate: NoAction, map: "fk_ep_team")
+  sportsbook_events sportsbook_events                           @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sportsbook_teams  sportsbook_teams                            @relation(fields: [team_id], references: [id], onUpdate: NoAction)
 
-  @@unique([event_id, team_id], map: "uq_ep_event_team")
-  @@index([event_id, display_order], map: "idx_ep_event_order")
-  @@index([team_id], map: "idx_ep_team")
+  @@unique([event_id, team_id])
+  @@index([event_id, display_order])
+  @@index([team_id])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model sportsbook_events {
-  id                                                                String                          @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                                                                String                          @id @default(uuid()) @db.Char(36)
   sport_id                                                          String                          @db.Char(36)
   league_id                                                         String?                         @db.Char(36)
   home_team_id                                                      String?                         @db.Char(36)
@@ -989,7 +1030,7 @@ model sportsbook_events {
   event_type                                                        sportsbook_events_event_type    @default(HEAD_TO_HEAD)
   start_time                                                        DateTime                        @db.Timestamp(0)
   status                                                            sportsbook_events_status        @default(SCHEDULED)
-  live_clock                                                        String?                         @db.Text
+  live_clock                                                        String?
   score_json                                                        Json?
   result_confirmed                                                  Boolean                         @default(false)
   meta_json                                                         Json?
@@ -1000,50 +1041,51 @@ model sportsbook_events {
   betting_settlement_jobs                                           betting_settlement_jobs[]
   br_feed_messages                                                  br_feed_messages[]
   sportsbook_event_participants                                     sportsbook_event_participants[]
-  sportsbook_teams_sportsbook_events_away_team_idTosportsbook_teams sportsbook_teams?               @relation("sportsbook_events_away_team_idTosportsbook_teams", fields: [away_team_id], references: [id], onUpdate: NoAction, map: "fk_events_away")
-  sportsbook_teams_sportsbook_events_home_team_idTosportsbook_teams sportsbook_teams?               @relation("sportsbook_events_home_team_idTosportsbook_teams", fields: [home_team_id], references: [id], onUpdate: NoAction, map: "fk_events_home")
-  sportsbook_leagues                                                sportsbook_leagues?             @relation(fields: [league_id], references: [id], onUpdate: NoAction, map: "fk_events_league")
-  sportsbook_sports                                                 sportsbook_sports               @relation(fields: [sport_id], references: [id], onUpdate: NoAction, map: "fk_events_sport")
+  sportsbook_teams_sportsbook_events_away_team_idTosportsbook_teams sportsbook_teams?               @relation("sportsbook_events_away_team_idTosportsbook_teams", fields: [away_team_id], references: [id], onUpdate: NoAction)
+  sportsbook_teams_sportsbook_events_home_team_idTosportsbook_teams sportsbook_teams?               @relation("sportsbook_events_home_team_idTosportsbook_teams", fields: [home_team_id], references: [id], onUpdate: NoAction)
+  sportsbook_leagues                                                sportsbook_leagues?             @relation(fields: [league_id], references: [id], onUpdate: NoAction)
+  sportsbook_sports                                                 sportsbook_sports               @relation(fields: [sport_id], references: [id], onUpdate: NoAction)
   sportsbook_markets                                                sportsbook_markets[]
 
-  @@index([away_team_id], map: "fk_events_away")
-  @@index([home_team_id], map: "fk_events_home")
-  @@index([external_id], map: "idx_events_external")
-  @@index([league_id, start_time], map: "idx_events_league_start")
-  @@index([status, sport_id, start_time, league_id], map: "idx_events_live")
-  @@index([sport_id, status, start_time, league_id, home_team_id, away_team_id, name, event_type], map: "idx_events_sport_status_start")
-  @@index([status, start_time], map: "idx_events_status_start")
-  @@fulltext([name], map: "ft_events_name")
+  @@index([away_team_id])
+  @@index([external_id])
+  @@index([home_team_id])
+  @@index([league_id, start_time])
+  @@index([name])
+  @@index([sport_id, status, start_time, league_id, home_team_id, away_team_id, name, event_type])
+  @@index([status, sport_id, start_time, league_id])
+  @@index([status, start_time])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model sportsbook_leagues {
-  id                   String                @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                   String                @id @default(uuid()) @db.Char(36)
   sport_id             String                @db.Char(36)
   country_id           String?               @db.Char(36)
   name                 String                @db.VarChar(255)
   season               String?               @db.VarChar(50)
   external_id          String?               @db.VarChar(255)
-  logo_url             String?               @db.Text
+  logo_url             String?
   display_order        Int                   @default(0)
   status               String                @default("ACTIVE") @db.VarChar(20)
   created_at           DateTime              @default(now()) @db.Timestamp(0)
   sportsbook_events    sportsbook_events[]
-  sportsbook_countries sportsbook_countries? @relation(fields: [country_id], references: [id], onUpdate: NoAction, map: "fk_leagues_country")
-  sportsbook_sports    sportsbook_sports     @relation(fields: [sport_id], references: [id], onUpdate: NoAction, map: "fk_leagues_sport")
+  sportsbook_countries sportsbook_countries? @relation(fields: [country_id], references: [id], onUpdate: NoAction)
+  sportsbook_sports    sportsbook_sports     @relation(fields: [sport_id], references: [id], onUpdate: NoAction)
 
-  @@index([country_id], map: "fk_leagues_country")
-  @@index([external_id], map: "idx_leagues_external")
-  @@index([sport_id, country_id], map: "idx_leagues_sport_country")
-  @@fulltext([name], map: "ft_leagues_name")
+  @@index([country_id])
+  @@index([external_id])
+  @@index([name])
+  @@index([sport_id, country_id])
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model sportsbook_market_types {
-  id                       String               @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                       String               @id @default(uuid()) @db.Char(36)
   sport_id                 String?              @db.Char(36)
   code                     String               @db.VarChar(100)
   name                     String               @db.VarChar(255)
-  description              String?              @db.Text
+  description              String?
   has_line                 Boolean              @default(false)
   selections_template_json Json?
   settlement_logic         String?              @db.VarChar(100)
@@ -1051,15 +1093,16 @@ model sportsbook_market_types {
   status                   String               @default("ACTIVE") @db.VarChar(20)
   created_at               DateTime             @default(now()) @db.Timestamp(0)
   br_market_mapping        br_market_mapping[]
-  sportsbook_sports        sportsbook_sports?   @relation(fields: [sport_id], references: [id], onUpdate: NoAction, map: "fk_mt_sport")
+  sportsbook_sports        sportsbook_sports?   @relation(fields: [sport_id], references: [id], onUpdate: NoAction)
   sportsbook_markets       sportsbook_markets[]
 
-  @@unique([sport_id, code], map: "uq_mt_sport_code")
-  @@index([sport_id, display_order], map: "idx_mt_sport_order")
+  @@unique([sport_id, code])
+  @@index([sport_id, display_order])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model sportsbook_markets {
-  id                      String                   @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                      String                   @id @default(uuid()) @db.Char(36)
   event_id                String                   @db.Char(36)
   market_type_id          String?                  @db.Char(36)
   name                    String                   @db.VarChar(255)
@@ -1072,29 +1115,31 @@ model sportsbook_markets {
   created_at              DateTime                 @default(now()) @db.Timestamp(0)
   updated_at              DateTime                 @default(now()) @db.Timestamp(0)
   betting_bet_legs        betting_bet_legs[]
-  sportsbook_events       sportsbook_events        @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_markets_event")
-  sportsbook_market_types sportsbook_market_types? @relation(fields: [market_type_id], references: [id], onUpdate: NoAction, map: "fk_markets_type")
+  sportsbook_events       sportsbook_events        @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sportsbook_market_types sportsbook_market_types? @relation(fields: [market_type_id], references: [id], onUpdate: NoAction)
   sportsbook_selections   sportsbook_selections[]
 
-  @@index([event_id], map: "idx_markets_event")
-  @@index([event_id, status, market_type_id], map: "idx_markets_event_status_type")
-  @@index([market_type_id], map: "idx_markets_type")
+  @@index([event_id])
+  @@index([event_id, status, market_type_id])
+  @@index([market_type_id])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model sportsbook_odds_snapshots {
-  id                    String                @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                    String                @db.Char(36)
   selection_id          String                @db.Char(36)
   odds                  Decimal               @db.Decimal(12, 4)
-  source                String?               @db.Text
+  source                String?
   ts                    DateTime              @default(now()) @db.Timestamp(0)
-  sportsbook_selections sportsbook_selections @relation(fields: [selection_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_odds_selection")
+  sportsbook_selections sportsbook_selections @relation(fields: [selection_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([id, ts])
-  @@index([selection_id, ts], map: "idx_odds_selection_ts")
+  @@index([selection_id, ts])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model sportsbook_selections {
-  id                        String                       @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                        String                       @id @default(uuid()) @db.Char(36)
   market_id                 String                       @db.Char(36)
   name                      String                       @db.VarChar(255)
   odds                      Decimal                      @default(1.0000) @db.Decimal(12, 4)
@@ -1105,16 +1150,17 @@ model sportsbook_selections {
   updated_at                DateTime                     @default(now()) @db.Timestamp(0)
   betting_bet_legs          betting_bet_legs[]
   sportsbook_odds_snapshots sportsbook_odds_snapshots[]
-  sportsbook_markets        sportsbook_markets           @relation(fields: [market_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_selections_market")
+  sportsbook_markets        sportsbook_markets           @relation(fields: [market_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([market_id], map: "idx_selections_market")
-  @@index([market_id, status, name, odds, result], map: "idx_selections_market_covering")
-  @@index([result], map: "idx_selections_result")
+  @@index([market_id])
+  @@index([market_id, status, name, odds, result])
+  @@index([result])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model sportsbook_sports {
-  id                      String                    @id @default(dbgenerated("(uuid())")) @db.Char(36)
-  code                    String                    @unique(map: "uq_sport_code") @db.VarChar(50)
+  id                      String                    @id @default(uuid()) @db.Char(36)
+  code                    String                    @unique @db.VarChar(50)
   name                    String                    @db.VarChar(255)
   status                  String                    @default("ACTIVE") @db.VarChar(20)
   created_at              DateTime                  @default(now()) @db.Timestamp(0)
@@ -1125,13 +1171,14 @@ model sportsbook_sports {
   sportsbook_teams        sportsbook_teams[]
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model sportsbook_teams {
-  id                                                                 String                          @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                                                                 String                          @id @default(uuid()) @db.Char(36)
   sport_id                                                           String                          @db.Char(36)
   type                                                               sportsbook_teams_type           @default(TEAM)
   name                                                               String                          @db.VarChar(255)
   short_name                                                         String?                         @db.VarChar(50)
-  logo_url                                                           String?                         @db.Text
+  logo_url                                                           String?
   external_id                                                        String?                         @db.VarChar(255)
   country_id                                                         String?                         @db.Char(36)
   status                                                             String                          @default("ACTIVE") @db.VarChar(20)
@@ -1139,34 +1186,35 @@ model sportsbook_teams {
   sportsbook_event_participants                                      sportsbook_event_participants[]
   sportsbook_events_sportsbook_events_away_team_idTosportsbook_teams sportsbook_events[]             @relation("sportsbook_events_away_team_idTosportsbook_teams")
   sportsbook_events_sportsbook_events_home_team_idTosportsbook_teams sportsbook_events[]             @relation("sportsbook_events_home_team_idTosportsbook_teams")
-  sportsbook_countries                                               sportsbook_countries?           @relation(fields: [country_id], references: [id], onUpdate: NoAction, map: "fk_teams_country")
-  sportsbook_sports                                                  sportsbook_sports               @relation(fields: [sport_id], references: [id], onUpdate: NoAction, map: "fk_teams_sport")
+  sportsbook_countries                                               sportsbook_countries?           @relation(fields: [country_id], references: [id], onUpdate: NoAction)
+  sportsbook_sports                                                  sportsbook_sports               @relation(fields: [sport_id], references: [id], onUpdate: NoAction)
 
-  @@index([country_id], map: "fk_teams_country")
-  @@index([external_id], map: "idx_teams_external")
-  @@index([sport_id], map: "idx_teams_sport")
-  @@fulltext([name, short_name], map: "ft_teams_name")
+  @@index([country_id])
+  @@index([external_id])
+  @@index([name, short_name])
+  @@index([sport_id])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model wallet_idempotency_keys {
-  id            String      @id @default(dbgenerated("(uuid())")) @db.Char(36)
-  key           String      @unique(map: "uq_idem_key") @db.VarChar(255)
+  id            String      @id @default(uuid()) @db.Char(36)
+  key           String      @unique @db.VarChar(255)
   route         String      @db.VarChar(255)
   user_id       String?     @db.Char(36)
-  request_hash  String      @db.Text
+  request_hash  String
   response_json Json?
   status        String      @default("IN_PROGRESS") @db.VarChar(20)
   created_at    DateTime    @default(now()) @db.Timestamp(0)
   expires_at    DateTime    @db.Timestamp(0)
-  auth_users    auth_users? @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "fk_idem_user")
+  auth_users    auth_users? @relation(fields: [user_id], references: [id], onUpdate: NoAction)
 
-  @@index([expires_at], map: "idx_idem_expires")
-  @@index([user_id], map: "idx_idem_user")
+  @@index([expires_at])
+  @@index([user_id])
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model wallet_ledger_entries {
-  id             String                          @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id             String                          @id @default(uuid()) @db.Char(36)
   wallet_id      String                          @db.Char(36)
   type           wallet_ledger_entries_type
   direction      wallet_ledger_entries_direction
@@ -1175,17 +1223,18 @@ model wallet_ledger_entries {
   currency       String                          @default("XOF") @db.VarChar(10)
   reference_type String?                         @db.VarChar(50)
   reference_id   String?                         @db.VarChar(255)
-  description    String?                         @db.Text
+  description    String?
   created_at     DateTime                        @default(now()) @db.Timestamp(0)
-  wallet_wallets wallet_wallets                  @relation(fields: [wallet_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ledger_wallet")
+  wallet_wallets wallet_wallets                  @relation(fields: [wallet_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([reference_type, reference_id], map: "idx_ledger_ref")
-  @@index([wallet_id, created_at, type, direction, amount, balance_after, reference_type, reference_id], map: "idx_ledger_wallet_covering")
-  @@index([wallet_id, created_at], map: "idx_ledger_wallet_created")
+  @@index([reference_type, reference_id])
+  @@index([wallet_id, created_at])
+  @@index([wallet_id, created_at, type, direction, amount, balance_after, reference_type, reference_id])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model wallet_payments {
-  id           String                 @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id           String                 @id @default(uuid()) @db.Char(36)
   user_id      String                 @db.Char(36)
   provider     String                 @db.VarChar(50)
   method       String                 @default("deposit") @db.VarChar(50)
@@ -1196,15 +1245,16 @@ model wallet_payments {
   meta_json    Json?
   created_at   DateTime               @default(now()) @db.Timestamp(0)
   updated_at   DateTime               @default(now()) @db.Timestamp(0)
-  auth_users   auth_users             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_payments_user")
+  auth_users   auth_users             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@unique([provider, provider_ref], map: "uq_payments_provider_ref")
-  @@index([status, created_at], map: "idx_payments_status_created")
-  @@index([user_id, created_at], map: "idx_payments_user_created")
+  @@unique([provider, provider_ref])
+  @@index([status, created_at])
+  @@index([user_id, created_at])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model wallet_wallets {
-  id                    String                  @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id                    String                  @id @default(uuid()) @db.Char(36)
   user_id               String                  @db.Char(36)
   currency              String                  @default("XOF") @db.VarChar(10)
   balance_available     Decimal                 @default(0.00) @db.Decimal(18, 2)
@@ -1213,14 +1263,15 @@ model wallet_wallets {
   created_at            DateTime                @default(now()) @db.Timestamp(0)
   updated_at            DateTime                @default(now()) @db.Timestamp(0)
   wallet_ledger_entries wallet_ledger_entries[]
-  auth_users            auth_users              @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_wallet_user")
+  auth_users            auth_users              @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@unique([user_id, currency], map: "uq_wallet_user_currency")
-  @@index([user_id], map: "idx_wallets_user")
+  @@unique([user_id, currency])
+  @@index([user_id])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model wallet_withdrawals {
-  id           String     @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  id           String     @id @default(uuid()) @db.Char(36)
   user_id      String     @db.Char(36)
   provider     String     @db.VarChar(50)
   method       String?    @db.VarChar(50)
@@ -1228,47 +1279,53 @@ model wallet_withdrawals {
   currency     String     @default("XOF") @db.VarChar(10)
   status       String     @default("REQUESTED") @db.VarChar(20)
   provider_ref String?    @db.VarChar(255)
-  reason       String?    @db.Text
+  reason       String?
   meta_json    Json?
   requested_at DateTime   @default(now()) @db.Timestamp(0)
   updated_at   DateTime   @default(now()) @db.Timestamp(0)
-  auth_users   auth_users @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_withdrawals_user")
+  auth_users   auth_users @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([status, requested_at], map: "idx_withdrawals_status")
-  @@index([user_id, requested_at], map: "idx_withdrawals_user")
+  @@index([status, requested_at])
+  @@index([user_id, requested_at])
 }
 
-enum br_entity_mapping_entity_type {
-  SPORT
-  CATEGORY
-  TOURNAMENT
-  SEASON
-  COMPETITOR
-  MATCH
-  STAGE
-  PLAYER
+enum admin_admin_users_status {
+  ACTIVE
+  SUSPENDED
 }
 
-enum br_feed_state_connection_status {
-  CONNECTED
-  DISCONNECTED
-  RECOVERING
+enum affiliate_attributions_model {
+  LAST_CLICK
+  FIRST_CLICK
+  LINEAR
 }
 
-enum obs_api_logs_method {
-  GET
-  POST
-  PUT
-  PATCH
-  DELETE
+enum affiliate_conversions_conversion_type {
+  SIGNUP
+  FIRST_DEPOSIT
+  NET_REVENUE
 }
 
-enum obs_error_logs_level {
-  DEBUG
-  INFO
-  WARN
-  ERROR
-  FATAL
+enum auth_otp_codes_channel {
+  SMS
+  EMAIL
+  WHATSAPP
+}
+
+enum auth_otp_codes_purpose {
+  REGISTRATION
+  LOGIN
+  PASSWORD_RESET
+  WITHDRAWAL
+  PHONE_VERIFY
+  EMAIL_VERIFY
+}
+
+enum auth_otp_codes_status {
+  PENDING
+  VERIFIED
+  EXPIRED
+  BLOCKED
 }
 
 enum auth_responsible_gaming_limit_type {
@@ -1285,6 +1342,75 @@ enum auth_responsible_gaming_limit_type {
   COOL_OFF
 }
 
+enum auth_responsible_gaming_status {
+  ACTIVE
+  PENDING_INCREASE
+  EXPIRED
+  REVOKED
+}
+
+enum auth_users_status {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum betting_bet_legs_status {
+  PENDING
+  WON
+  LOST
+  VOID
+  CANCELLED
+}
+
+enum betting_bets_status {
+  DRAFT
+  PLACED
+  PENDING
+  WON
+  LOST
+  VOID
+  CASHED_OUT
+  CANCELLED
+}
+
+enum betting_bets_type {
+  SINGLE
+  ACCA
+  SYSTEM
+}
+
+enum betting_cashout_offers_status {
+  AVAILABLE
+  ACCEPTED
+  EXPIRED
+  SUSPENDED
+}
+
+enum betting_cashout_transactions_status {
+  PENDING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+enum betting_cashout_transactions_type {
+  FULL
+  PARTIAL
+}
+
+enum br_entity_mapping_entity_type {
+  SPORT
+  CATEGORY
+  TOURNAMENT
+  SEASON
+  COMPETITOR
+  MATCH
+  STAGE
+  PLAYER
+}
+
 enum br_feed_messages_message_type {
   ODDS_CHANGE
   BET_STOP
@@ -1297,6 +1423,47 @@ enum br_feed_messages_message_type {
   PRODUCER_UP
   PRODUCER_DOWN
   OTHER
+}
+
+enum br_feed_messages_status {
+  RECEIVED
+  PROCESSED
+  SKIPPED
+  ERROR
+}
+
+enum br_feed_state_connection_status {
+  CONNECTED
+  DISCONNECTED
+  RECOVERING
+}
+
+enum br_producers_status {
+  ACTIVE
+  DOWN
+  RECOVERING
+}
+
+enum compliance_encryption_keys_status {
+  ACTIVE
+  ROTATED
+  REVOKED
+}
+
+enum notif_notifications_channel {
+  SMS
+  EMAIL
+  PUSH
+  IN_APP
+}
+
+enum notif_notifications_status {
+  PENDING
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+  READ
 }
 
 enum notif_preferences_channel {
@@ -1313,127 +1480,18 @@ enum notif_templates_channel {
   IN_APP
 }
 
-enum sportsbook_teams_type {
-  TEAM
-  INDIVIDUAL
+enum obs_api_logs_method {
+  GET
+  POST
+  PUT
+  PATCH
+  DELETE
 }
 
-enum wallet_ledger_entries_type {
-  DEPOSIT
-  WITHDRAW
-  BET_STAKE
-  BET_WIN
-  BET_REFUND
-  BONUS_GRANTED
-  BONUS_EXPIRED
-  BONUS_CONVERTED
-  ADJUSTMENT
-  FEE
-  REFUND
-}
-
-enum affiliate_conversions_conversion_type {
-  SIGNUP
-  FIRST_DEPOSIT
-  NET_REVENUE
-}
-
-enum auth_otp_codes_channel {
-  SMS
-  EMAIL
-  WHATSAPP
-}
-
-enum betting_bets_type {
+enum obs_bet_funnel_bet_type {
   SINGLE
   ACCA
   SYSTEM
-}
-
-enum notif_notifications_channel {
-  SMS
-  EMAIL
-  PUSH
-  IN_APP
-}
-
-enum obs_device_fingerprints_device_type {
-  DESKTOP
-  MOBILE
-  TABLET
-  APP_IOS
-  APP_ANDROID
-}
-
-enum obs_fraud_signals_signal_type {
-  MULTI_ACCOUNT
-  VELOCITY_SPIKE
-  UNUSUAL_STAKE_PATTERN
-  GEO_ANOMALY
-  DEVICE_CHANGE
-  IP_PROXY_VPN
-  BONUS_ABUSE
-  ARB_BETTING
-  LATE_BETTING
-  STEAM_MOVE
-  DEPOSIT_WITHDRAW_CYCLE
-  IDENTITY_MISMATCH
-  CHARGEBACK_RISK
-  SELF_EXCLUSION_BYPASS
-}
-
-enum obs_login_attempts_method {
-  PASSWORD
-  OTP
-  SOCIAL
-  BIOMETRIC
-}
-
-enum obs_sessions_tracking_device_type {
-  DESKTOP
-  MOBILE
-  TABLET
-  APP_IOS
-  APP_ANDROID
-}
-
-enum promo_promo_codes_type {
-  DEPOSIT_MATCH
-  FREEBET
-  ODDS_BOOST
-  CASHBACK
-}
-
-enum promo_promo_redemptions_status {
-  PENDING
-  APPLIED
-  REJECTED
-  CANCELLED
-}
-
-enum sportsbook_event_participants_role {
-  HOME
-  AWAY
-  PARTICIPANT
-  DRAW_NUMBER
-}
-
-enum wallet_ledger_entries_direction {
-  CREDIT
-  DEBIT
-}
-
-enum affiliate_attributions_model {
-  LAST_CLICK
-  FIRST_CLICK
-  LINEAR
-}
-
-enum betting_cashout_offers_status {
-  AVAILABLE
-  ACCEPTED
-  EXPIRED
-  SUSPENDED
 }
 
 enum obs_bet_funnel_step {
@@ -1473,11 +1531,72 @@ enum obs_click_tracking_click_type {
   OTHER
 }
 
+enum obs_device_fingerprints_device_type {
+  DESKTOP
+  MOBILE
+  TABLET
+  APP_IOS
+  APP_ANDROID
+}
+
+enum obs_error_logs_level {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+  FATAL
+}
+
 enum obs_fraud_signals_severity {
   LOW
   MEDIUM
   HIGH
   CRITICAL
+}
+
+enum obs_fraud_signals_signal_type {
+  MULTI_ACCOUNT
+  VELOCITY_SPIKE
+  UNUSUAL_STAKE_PATTERN
+  GEO_ANOMALY
+  DEVICE_CHANGE
+  IP_PROXY_VPN
+  BONUS_ABUSE
+  ARB_BETTING
+  LATE_BETTING
+  STEAM_MOVE
+  DEPOSIT_WITHDRAW_CYCLE
+  IDENTITY_MISMATCH
+  CHARGEBACK_RISK
+  SELF_EXCLUSION_BYPASS
+}
+
+enum obs_fraud_signals_status {
+  NEW
+  REVIEWING
+  CONFIRMED
+  DISMISSED
+  ESCALATED
+}
+
+enum obs_login_attempts_failure_reason {
+  WRONG_PASSWORD
+  WRONG_OTP
+  ACCOUNT_NOT_FOUND
+  ACCOUNT_SUSPENDED
+  ACCOUNT_BANNED
+  SELF_EXCLUDED
+  COOL_OFF_ACTIVE
+  RATE_LIMITED
+  EXPIRED_OTP
+  DEVICE_NOT_RECOGNIZED
+}
+
+enum obs_login_attempts_method {
+  PASSWORD
+  OTP
+  SOCIAL
+  BIOMETRIC
 }
 
 enum obs_page_views_page_type {
@@ -1502,54 +1621,6 @@ enum obs_page_views_page_type {
   OTHER
 }
 
-enum sportsbook_selections_result {
-  PENDING
-  WIN
-  LOSE
-  VOID
-  HALF_WIN
-  HALF_LOSE
-  PUSH
-}
-
-enum admin_admin_users_status {
-  ACTIVE
-  SUSPENDED
-}
-
-enum auth_otp_codes_purpose {
-  REGISTRATION
-  LOGIN
-  PASSWORD_RESET
-  WITHDRAWAL
-  PHONE_VERIFY
-  EMAIL_VERIFY
-}
-
-enum betting_cashout_transactions_type {
-  FULL
-  PARTIAL
-}
-
-enum compliance_encryption_keys_status {
-  ACTIVE
-  ROTATED
-  REVOKED
-}
-
-enum obs_login_attempts_failure_reason {
-  WRONG_PASSWORD
-  WRONG_OTP
-  ACCOUNT_NOT_FOUND
-  ACCOUNT_SUSPENDED
-  ACCOUNT_BANNED
-  SELF_EXCLUDED
-  COOL_OFF_ACTIVE
-  RATE_LIMITED
-  EXPIRED_OTP
-  DEVICE_NOT_RECOGNIZED
-}
-
 enum obs_search_logs_search_type {
   GLOBAL
   SPORT
@@ -1558,43 +1629,26 @@ enum obs_search_logs_search_type {
   LEAGUE
 }
 
-enum auth_responsible_gaming_status {
-  ACTIVE
-  PENDING_INCREASE
-  EXPIRED
-  REVOKED
+enum obs_sessions_tracking_device_type {
+  DESKTOP
+  MOBILE
+  TABLET
+  APP_IOS
+  APP_ANDROID
 }
 
-enum betting_bet_legs_status {
+enum promo_promo_codes_type {
+  DEPOSIT_MATCH
+  FREEBET
+  ODDS_BOOST
+  CASHBACK
+}
+
+enum promo_promo_redemptions_status {
   PENDING
-  WON
-  LOST
-  VOID
+  APPLIED
+  REJECTED
   CANCELLED
-}
-
-enum sportsbook_events_event_type {
-  HEAD_TO_HEAD
-  MULTI_PARTICIPANT
-  OUTRIGHT
-}
-
-enum wallet_payments_status {
-  INITIATED
-  PENDING
-  SUCCESS
-  FAILED
-  CANCELLED
-  REFUNDED
-}
-
-enum notif_notifications_status {
-  PENDING
-  QUEUED
-  SENT
-  DELIVERED
-  FAILED
-  READ
 }
 
 enum sportsbook_event_participants_result_status {
@@ -1605,39 +1659,17 @@ enum sportsbook_event_participants_result_status {
   DNS
 }
 
-enum auth_otp_codes_status {
-  PENDING
-  VERIFIED
-  EXPIRED
-  BLOCKED
+enum sportsbook_event_participants_role {
+  HOME
+  AWAY
+  PARTICIPANT
+  DRAW_NUMBER
 }
 
-enum betting_cashout_transactions_status {
-  PENDING
-  COMPLETED
-  FAILED
-  REVERSED
-}
-
-enum br_feed_messages_status {
-  RECEIVED
-  PROCESSED
-  SKIPPED
-  ERROR
-}
-
-enum br_producers_status {
-  ACTIVE
-  DOWN
-  RECOVERING
-}
-
-enum obs_fraud_signals_status {
-  NEW
-  REVIEWING
-  CONFIRMED
-  DISMISSED
-  ESCALATED
+enum sportsbook_events_event_type {
+  HEAD_TO_HEAD
+  MULTI_PARTICIPANT
+  OUTRIGHT
 }
 
 enum sportsbook_events_status {
@@ -1648,26 +1680,45 @@ enum sportsbook_events_status {
   POSTPONED
 }
 
-enum betting_bets_status {
-  DRAFT
-  PLACED
+enum sportsbook_selections_result {
   PENDING
-  WON
-  LOST
+  WIN
+  LOSE
   VOID
-  CASHED_OUT
-  CANCELLED
+  HALF_WIN
+  HALF_LOSE
+  PUSH
 }
 
-enum obs_bet_funnel_bet_type {
-  SINGLE
-  ACCA
-  SYSTEM
+enum sportsbook_teams_type {
+  TEAM
+  INDIVIDUAL
 }
 
-enum auth_users_status {
+enum wallet_ledger_entries_direction {
+  CREDIT
+  DEBIT
+}
+
+enum wallet_ledger_entries_type {
+  DEPOSIT
+  WITHDRAW
+  BET_STAKE
+  BET_WIN
+  BET_REFUND
+  BONUS_GRANTED
+  BONUS_EXPIRED
+  BONUS_CONVERTED
+  ADJUSTMENT
+  FEE
+  REFUND
+}
+
+enum wallet_payments_status {
+  INITIATED
   PENDING
-  ACTIVE
-  SUSPENDED
-  BANNED
+  SUCCESS
+  FAILED
+  CANCELLED
+  REFUNDED
 }
