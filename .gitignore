@@ -1,0 +1,9 @@
+node_modules
+dist
+coverage
+.DS_Store
+
+# Keep local environment variables out of version control
+.env
+.env.*
+!.env.example
