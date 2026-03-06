@@ -8,6 +8,9 @@ Backend stack:
 
 ## 1) Install
 
+Requirements:
+- Node.js `24+`
+
 ```bash
 npm install
 ```
