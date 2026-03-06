@@ -1,6 +1,15 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
+import type { PoolConfig } from 'pg';
+
+const parseBooleanEnv = (value: string | undefined, fallback: boolean) => {
+  if (value === undefined) {
+    return fallback;
+  }
+
+  return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
+};
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleDestroy {
@@ -10,8 +19,20 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
       throw new Error('DATABASE_URL is not set');
     }
 
+    const sslEnabled = parseBooleanEnv(process.env.DATABASE_SSL_ENABLED, true);
+    const rejectUnauthorized = parseBooleanEnv(
+      process.env.DATABASE_SSL_REJECT_UNAUTHORIZED,
+      false,
+    );
+    const poolConfig: PoolConfig = { connectionString };
+
+    if (sslEnabled) {
+      // Useful for hosted DBs where chain validation can fail in serverless runtimes.
+      poolConfig.ssl = { rejectUnauthorized };
+    }
+
     super({
-      adapter: new PrismaPg({ connectionString }),
+      adapter: new PrismaPg(poolConfig),
     });
   }
 

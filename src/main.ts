@@ -22,7 +22,7 @@ async function bootstrap() {
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Syrabet API')
-    .setDescription('Backend API built with NestJS, Prisma and MariaDB')
+    .setDescription('Backend API built with NestJS, Prisma and PostgreSQL')
     .setVersion('1.0.0')
     .addBearerAuth()
     .build();

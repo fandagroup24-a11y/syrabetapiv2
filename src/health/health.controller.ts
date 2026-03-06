@@ -13,7 +13,7 @@ export class HealthController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Check API and MariaDB health' })
+  @ApiOperation({ summary: 'Check API and PostgreSQL health' })
   @ApiOkResponse({
     description: 'Service and database are healthy',
     schema: {
