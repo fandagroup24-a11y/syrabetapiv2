@@ -17,7 +17,7 @@ Set these in Hostinger environment variables:
 
 - `HOST=0.0.0.0`
 - `PORT=3000` (or keep Hostinger provided port)
-- `DATABASE_URL=postgresql://postgres.[PROJECT-REF]:[URL_ENCODED_PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1&sslmode=require`
+- `DATABASE_URL=postgresql://postgres.[PROJECT-REF]:[URL_ENCODED_PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1`
 - `DATABASE_SSL_ENABLED=true`
 - `DATABASE_SSL_REJECT_UNAUTHORIZED=false`
 - `SUPABASE_DIRECT_URL=postgresql://postgres:[URL_ENCODED_PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres?sslmode=require` (optional, only for Prisma tooling like `db pull`)

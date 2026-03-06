@@ -11,6 +11,18 @@ const parseBooleanEnv = (value: string | undefined, fallback: boolean) => {
   return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
 };
 
+const normalizeConnectionString = (value: string) => {
+  const url = new URL(value);
+  // Keep SSL behavior under explicit env flags to avoid pg connection-string overrides.
+  url.searchParams.delete('ssl');
+  url.searchParams.delete('sslmode');
+  url.searchParams.delete('sslcert');
+  url.searchParams.delete('sslkey');
+  url.searchParams.delete('sslrootcert');
+
+  return url.toString();
+};
+
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleDestroy {
   constructor() {
@@ -24,12 +36,10 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
       process.env.DATABASE_SSL_REJECT_UNAUTHORIZED,
       false,
     );
-    const poolConfig: PoolConfig = { connectionString };
-
-    if (sslEnabled) {
-      // Useful for hosted DBs where chain validation can fail in serverless runtimes.
-      poolConfig.ssl = { rejectUnauthorized };
-    }
+    const poolConfig: PoolConfig = {
+      connectionString: normalizeConnectionString(connectionString),
+      ssl: sslEnabled ? { rejectUnauthorized } : false,
+    };
 
     super({
       adapter: new PrismaPg(poolConfig),
